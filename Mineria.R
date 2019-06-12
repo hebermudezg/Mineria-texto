@@ -1,8 +1,24 @@
+##############################################################################
+####------------------- Mineria de texto mediante webscraping---------- ######
+##############################################################################
 
-################################El empleo########################################
+# librerias
 
+# rvest es un nuevo paquete que facilita el raspado
+# (o recolección) de datos de páginas web html, creado por Hadley Wickham
 library(rvest)
-#library(xml2)
+
+# El paquete dplyr proporciona una forma bastante ágil
+# de manejar los ficheros de datos de R
+library(dplyr) 
+
+
+
+##############################################
+#####ofertas de empleo ciencia de datos #####
+#############################################
+
+#### El empleo 
 
 url <- "https://www.elempleo.com/co/ofertas-empleo/trabajo-cientifico-de-datos"
 enlaces <- read_html(url) %>%  html_nodes(".result-item a") %>%  xml_attr("href")
@@ -15,7 +31,7 @@ for (i in 1:length(enlaces)){
 }
 
 
-############################## opcionempleo ###########################
+#### opcionempleo 
 
 url <- "https://www.opcionempleo.com.co/empleo-mineria-de-datos.html"
 enlaces <- read_html(url) %>%  html_nodes(".job a") %>%  xml_attr("href")
@@ -29,12 +45,9 @@ for (i in seq(1,length(enlaces),2)){
 }
 
 
+#### Linkedin
 
-############################# Linkedin ###############################
-library(dplyr)
-
-url<-"https://co.linkedin.com/jobs/search?countryRedirected=1&pageNum=0&position=1&keywords=Cient%C3%ADfico%20de%20datos&location=Colombia&currentJobId=1293908240"
-
+url <- "https://co.linkedin.com/jobs/search?countryRedirected=1&pageNum=0&position=1&keywords=Cient%C3%ADfico%20de%20datos&location=Colombia&currentJobId=1293908240"
 enlaces<-read_html(url) %>% html_nodes(".jobs-search-result-item a") %>% html_attr("href")
 
 linkedinES <- vector()
@@ -44,95 +57,88 @@ for (i in 1:length(enlaces)){
 }
 
 
-
-# unificando las descripciones de las ofertas de empleo
-texto <- c(elempleo, opcionempleo)
-#texto2 <- texto  # copia de seguridad
-#texto <- texto[1]
-
-save.image(file = "cadenas.RData")
-length(texto)
+# uniedo todas las cadenas de texto recolectadas sobre "ofertas de empleo ciencia de datos"
+ofertas_empleo <- c(elempleo, opcionempleo, linkedinES) # 68
 
 
 
+##############################################
+##### Terminologias ciencias de datos #####
+#############################################
 
-# provemos conbinando los vectores de texto
-#texto <-  paste(texto, collapse = ' ')
+#############################
+#####machine learning########
+#############################
 
+url <- "https://cleverdata.io/que-es-machine-learning-big-data/"
+ML1 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://www.sas.com/es_co/insights/analytics/machine-learning.html"
+ML2 <- read_html(url) %>% html_nodes(".cq-colctrl-lt0 , #machine-learning-usersscroll p , h4 , h4 .txt-white , #machine-learning-importancescroll p , h2+ p , p .txt-large") %>% html_text()
+url <- "https://es.wikipedia.org/wiki/Aprendizaje_autom%C3%A1tico"
+ML3 <- read_html(url) %>% html_nodes("ul+ p , p:nth-child(7) , h3+ p , p+ p , p:nth-child(63) , li li+ li , .mw-redirect , p:nth-child(71) , dd , p:nth-child(1)") %>% html_text()
 
-library(tm)
-# limpiando el texto
-
-text_df <- removeWords(texto, words = stopwords("spanish")) # removiendo stop words
-text_df <- removePunctuation(text_df) # removiendo puntuaciones
-text_df <- removeNumbers(text_df)     # removiendo numeros 
-text_df <- stripWhitespace(text_df)   #removiedo espacios en blanco
-
-
-
-# creando copus. 
-# acervo de documento a analizar.----------------------
-nov_corpus <- Corpus(VectorSource(text_df))
-nov_corpus[[1]]
+# uniendo la infomacion sobre "machine learning"
+machine_learning <-c(ML1,ML2,ML3)
 
 
+#############################
+#####ciencia de datos########
+#############################
 
-# nube de palabras ----------------------------
-library(wordcloud)
+url <- "https://www.xataka.com/otros/de-profesion-cientifico-de-datos"
+CD1 <- read_html(url) %>% html_nodes("p:nth-child(52) , p:nth-child(51) , .js-post-images-container li , .article-asset-normal+ p") %>% html_text()
+url <- "https://medium.com/datos-y-ciencia/qu%C3%A9-diablos-es-ciencia-de-datos-f1c8c7add107"
+CD2 <- read_html(url) %>% html_nodes(".sectionLayout--fullWidth+ .sectionLayout--insetColumn , #58ff") %>% html_text()
+url <- "https://es.wikipedia.org/wiki/Ciencia_de_datos"
+CD3 <- read_html(url) %>% html_nodes("p+ ol li , p+ ul li , p") %>% html_text()
 
-#nov_corpus %>% unnest_tokens(bigram, nov_corpus, token = "ngrams", n = 2)
-wordcloud(nov_corpus, max.words = 200, random.order = F,
-          colors = brewer.pal(name = "Dark2", n = 20))
-
-
-
-
-#Term Document Matrix
-nov_tdm <- TermDocumentMatrix(nov_corpus)
-nov_tdm
-
-
-# Frecuencia de palabras
-nov_mat <- as.matrix(nov_tdm)
-dim(nov_mat)
+# uniendo la informacion sobre "ciencia de datos"
+ciencia_de_datos <- c(CD1, CD2, CD3)
 
 
-nov_mat <- nov_mat %>% rowSums() %>% sort(decreasing = TRUE)
-nov_mat <- data.frame(palabra = names(nov_mat), frec = nov_mat)
+#############################
+##########estadística########
+#############################
+
+url <- "https://es.wikipedia.org/wiki/Estad%C3%ADstica"
+E1 <- read_html(url) %>% html_nodes("td li , h3+ ul li , ul+ ul li , p+ ul li , p") %>% html_text()
+url <- "https://economipedia.com/definiciones/estadistica.html"
+E2 <- read_html(url) %>% html_nodes(".entry-content li , .entry-content p , #main strong") %>% html_text()
+url <- "https://www.significados.com/estadistica/"
+E3 <- read_html(url) %>% html_nodes("p:nth-child(4) , h3+ p , h2+ p , .desktop-only+ p") %>% html_text()
+
+#uniendo infomacion sobre "estadistica"
+estadistica <- c(E1, E2, E3)
 
 
-##### graficas de frecuencias
+##########################################
+##########inteligencia artificial ########
+#########################################
 
-nov_mat[1:10, ] %>%
-  ggplot(aes(palabra, frec)) +
-  geom_bar(stat = "identity", color = "black", fill = "#87CEFA") +
-  geom_text(aes(hjust = 1.3, label = frec)) + 
-  coord_flip() + 
-  labs(title = "Diez palabras más frecuentes en Niebla",  x = "Palabras", y = "Número de usos")
+url <- "https://es.wikipedia.org/wiki/Inteligencia_artificial"
+IA1 <- read_html(url) %>% html_nodes("ul+ ul li , p+ ul li , p") %>% html_text()
+url <- "https://searchdatacenter.techtarget.com/es/definicion/Inteligencia-artificial-o-AI"
+IA2 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://www.muyinteresante.es/tecnologia/articulo/ventajas-y-riesgos-de-la-inteligencia-artificial-651449483429"
+IA3 <- read_html(url) %>% html_nodes("p") %>% html_text()
 
-
-########### Agrupamiento jerarquico ## 
-nov_new <- removeSparseTerms(nov_tdm, sparse = .95)
-nov_new <- nov_new %>% as.matrix()
-nov_new <- nov_new[1:50] / rowSums(nov_new)
-nov_dist <- dist(nov_new, method = "euclidian")
-nov_hclust <-  hclust(nov_dist, method = "ward.D")
-plot(nov_hclust, main = "Dendrograma de Niebla - hclust", sub = "", xlab = "")
+# uniendo informacion sobre IA
+inteligencia_artificial <- c(IA1, IA2, IA3)
 
 
-# coloquemos este texto en un marco de datos (moderno marco de datos)
-library(dplyr)
-text_df <- tibble(line = 1:length(texto), texto = texto)
-text_df
+##########################################
+##########big data#######################
+#########################################
 
+url <- "https://www.sas.com/es_co/insights/big-data/what-is-big-data.html"
+BD1 <- read_html(url) %>% html_nodes("#dmusersscroll p , h4 , .list-bullet , .cq-colctrl-lt8-c1 p , #dmhistoryscroll div , p .txt-large") %>% html_text()
+url <- "https://www.oracle.com/co/big-data/guide/what-is-big-data.html"
+BD2 <- read_html(url) %>% html_nodes(".c89w1 p , #cw31panel-0_0 p , .c81v0 li , .c81w1 p") %>% html_text()
+url <- "https://www.bit.es/knowledge-center/que-es-big-data-introduccion-a-big-data/"
+BD3 <- read_html(url) %>% html_nodes(".col-md-8 main") %>% html_text()
 
-# tokenizar (dividir por n-gramas (ej: palabras))
-# nota: elimina puntuacion, convierte en minusculas
-library(tidytext)
-text_df %>% unnest_tokens(word, texto)
-
-
-
+# uniendo infomacion "big data"
+big_data <- c(BD1, BD2, BD3)
 
 
 
