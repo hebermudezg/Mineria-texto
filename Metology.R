@@ -126,6 +126,8 @@ series %>%
   group_by(book) %>%
   count(word, sort = TRUE) %>%
   top_n(10)
+dim(series)
+
 
 
 # Podemos visualizar esto con
@@ -183,7 +185,7 @@ ggplot(frequency, aes(x = book_words, y = all_words, color = abs(all_words - boo
   scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
   facet_wrap(~ book, ncol = 2) +
   theme(legend.position="none") +
-  labs(y = "Harry Potter Series", x = NULL)
+  labs(y = "Términos consultados", x = NULL)
 
 
 
@@ -194,3 +196,11 @@ frequency %>%
   group_by(book) %>%
   summarize(correlation = cor(book_words, all_words),
             p_value = cor.test(book_words, all_words)$p.value)
+
+
+
+###########################################
+##################### sentimientos
+
+library(tm)
+help(tm)
