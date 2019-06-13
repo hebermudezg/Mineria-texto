@@ -72,12 +72,12 @@ load(file = "textominado.RData")
 
 
 titles <- c("ofertas de empleo", "machine learning",
-             "ciencia de datos", "estadística",
-             "inteligencia artificial", "big data")
+            "ciencia de datos", "estadística",
+            "inteligencia artificial", "big data")
 
 books <- list(ofertas_empleo, machine_learning,
-                    ciencia_de_datos, estadistica,
-                    inteligencia_artificial, big_data)
+              ciencia_de_datos, estadistica,
+              inteligencia_artificial, big_data)
 
 series <- tibble()
 for(i in seq_along(titles)) {
@@ -120,7 +120,7 @@ series %>%
 
 
 
-  series %>%
+series %>%
   anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
   group_by(book) %>%
   count(word, sort = TRUE) %>%
@@ -206,8 +206,8 @@ series %>%
   group_by(book) %>% 
   count(word, sort = TRUE) %>% filter(book == "ofertas de empleo") %>%
   with(wordcloud(words = word, freq = n, min.freq = 1,
-                                                    max.words=50, random.order=FALSE, rot.per=0.35, 
-                                                    colors=brewer.pal(8, "Dark2"))) 
+                 max.words=50, random.order=FALSE, rot.per=0.35, 
+                 colors=brewer.pal(8, "Dark2"))) 
 
 
 
@@ -361,3 +361,4 @@ series %>%
   drlib::scale_x_reordered() +
   facet_wrap(~ book, ncol = 2, scales = "free") +
   coord_flip()
+
