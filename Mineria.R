@@ -142,4 +142,19 @@ big_data <- c(BD1, BD2, BD3)
 
 
 
+##
+ofertas_empleo
+machine_learning
+ciencia_de_datos 
+estadistica
+inteligencia_artificial
+big_data
+
+
+save(ofertas_empleo, machine_learning,ciencia_de_datos,
+     estadistica,inteligencia_artificial, big_data,
+     file = "textominado.RData")
+
+
+
 

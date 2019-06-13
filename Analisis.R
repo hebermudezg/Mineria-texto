@@ -398,6 +398,9 @@ nov_text <- stripWhitespace(nov_text)   #removiedo espacios en blanco
 nov_corpus <- Corpus(VectorSource(nov_text))
 nov_corpus
 
+stop_words
+stopwords("spanish")
+
 
 # nuve de palabras ----------------------------
 #nov_ptd <- tm_map(nov_corpus, PlainTextDocument)
@@ -482,8 +485,19 @@ if (packageVersion("devtools") < 1.6) {
 devtools::install_github("bradleyboehmke/harrypotter")
 
 
+# librerias 
+
+library(tidyverse)      # data manipulation & plotting
+library(stringr)        # text cleaning and regular expressions
+library(tidytext)       # provides additional text mining functions
+library(harrypotter)    # provides the first seven novels of the Harry Potter series
 
 
+philosop
+## Texto ordenando --------------------------------------
 
-
+# para analizar correctamente este texto queremos convertirlo en un marco de datos o tibble.
+philosophers_stone[1:2]
+text_tb <- tibble(chapter = seq_along(philosophers_stone),
+                  text = philosophers_stone)
 

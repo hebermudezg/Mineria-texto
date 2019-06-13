@@ -1,11 +1,5 @@
 
-
-#----------------------- Metodologia------------------------------
-#----------------------------------------------------------------#
-
-# Un requisito fundamental para hacer analisis de texto es tener el texto ordenado
-# a menudo el texto viene en formato no estructurado.
-
+## Metodologia ##
 
 # 1. Recoleccion de la informacion
 # 2. Formato ordenado tibble
@@ -17,19 +11,13 @@
 # 5. 
 
 
-
-
-# 1. recoleccion  ------------------
+##### 1 ----
 load(file = "textominado.RData")
-
-
 
 
 
 # 2. Formato odenado tibble ------------------------
 text_tb <- tibble(chapter = seq_along(texto), text = texto)
-text_tb
-# contiene dos columnas, 1. la enumeracion, 2.el contenido de la vacante
 
 
 
@@ -74,6 +62,11 @@ ggplot(data = tokenizado_ordenado[1:15,], aes(x=word, y=n)) +
 ################ Analisis con todos los datos ########
 ######################################################
 
+library(dplyr)
+library(tidytext) 
+library(tidyverse)
+library(tm)
+library(wordcloud)
 
 load(file = "textominado.RData")
 
@@ -87,9 +80,7 @@ books <- list(ofertas_empleo, machine_learning,
                     inteligencia_artificial, big_data)
 
 series <- tibble()
-
 for(i in seq_along(titles)) {
-  
   clean <- tibble(chapter = seq_along(books[[i]]),
                   text = books[[i]]) %>%
     unnest_tokens(word, text) %>%
@@ -101,55 +92,151 @@ for(i in seq_along(titles)) {
 
 # set factor to keep books in order of publication
 series$book <- factor(series$book, levels = rev(titles))
-
 series
 
 
-## contando frecuencias
+## contando frecuencias ------------------------
 
 series %>%
   count(word, sort = TRUE)
 
 
 
+## eliminado stopwords -------------------------------
+## haciendo nube de palabras
 
-## eliminado stopwords
 stop_words_spanish <- data.frame(word = stopwords("spanish"))
+mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si",
+                                    "uso", "debe", "tipo", "años", "pueden", "puede",
+                                    "si", "sí", "NA", "NA NA"))
+
+#win.graph()
 series %>%
-  anti_join(stop_words_spanish) %>%
-  count(word, sort = TRUE)
+  anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
+  count(word, sort = TRUE) %>% with(wordcloud(unique(word), n, max.words = 50,
+                                              random.order = F,
+                                              colors = brewer.pal(name = "Dark2", n = 8)))
 
 
 
-series %>%
-  anti_join(stop_words_spanish) %>%
+
+  series %>%
+  anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
   group_by(book) %>%
   count(word, sort = TRUE) %>%
-  top_n(10)
-dim(series)
+  top_n(10) 
 
 
 
+
+
+####### palabra individual
 # Podemos visualizar esto con
 # visualizacion de la frecuencia absoluta de palabras por términos consultados
 
-
 series %>%
-  anti_join(stop_words_spanish) %>%
+  anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
   group_by(book) %>%
   count(word, sort = TRUE) %>%
   top_n(10) %>%
   ungroup() %>%
-  mutate(book = factor(book, levels = titles),
-         text_order = nrow(.):1) %>%
-  ggplot(aes(reorder(word, text_order), n, fill = book)) +
+  ggplot(aes(reorder(word, n), n, fill = book)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ book, scales = "free_y") +
-  labs(x = "NULL", y = "Frequency") +
-  coord_flip() +
-  theme(legend.position="none")
+  labs(x = "", y = "Frecuencia", title = "Frecuencia de palabras") +
+  coord_flip() + theme(legend.position="none")
 
 
+########################################
+################ bi-grama  #############
+
+
+series <- tibble()
+for(i in seq_along(titles)) {
+  
+  clean <- tibble(chapter = seq_along(books[[i]]),
+                  text = books[[i]]) %>%
+    unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+    mutate(book = titles[i]) %>%
+    select(book, everything())
+  
+  series <- rbind(series, clean)
+}
+
+# convertir titulos a factores
+series$book <- factor(series$book, levels = rev(titles))
+series
+
+
+stop_words_spanish$word <- as.character(stop_words_spanish$word)
+mas_palabras$word <- as.character(mas_palabras$word)
+
+series %>% 
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  filter(!word1 %in% stop_words_spanish$word,
+         !word2 %in% stop_words_spanish$word) %>%
+  filter(!word1 %in% mas_palabras$word,
+         !word2 %in% mas_palabras$word) %>%
+  count(book,word1, word2, sort = TRUE) %>%
+  unite("bigram", c(word1, word2), sep = " ") %>%
+  group_by(book) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(book = factor(book) %>% forcats::fct_rev()) %>%
+  ggplot(aes(reorder(bigram,n), n, fill = book))+
+  geom_bar(stat = "identity", alpha = .8, show.legend = FALSE)+
+  facet_wrap(~ book, ncol = 2, scales = "free") +
+  coord_flip()
+
+
+
+
+
+
+
+
+
+##########################################################
+################## Nubes por categoria ##################
+########################################################
+
+
+series %>%
+  anti_join(stop_words_spanish) %>%
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>% filter(book == "ofertas de empleo") %>%
+  with(wordcloud(words = word, freq = n, min.freq = 1,
+                                                    max.words=50, random.order=FALSE, rot.per=0.35, 
+                                                    colors=brewer.pal(8, "Dark2"))) 
+
+
+
+series %>%
+  anti_join(stop_words_spanish) %>%
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>% filter(book == "big data") %>%
+  with(wordcloud(words = word, freq = n, min.freq = 1,
+                 max.words=50, random.order=FALSE, rot.per=0.35, 
+                 colors=brewer.pal(8, "Dark2"))) 
+
+
+
+series %>%
+  anti_join(stop_words_spanish) %>%
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>% filter(book == "estadística") %>%
+  with(wordcloud(words = word, freq = n, min.freq = 1,
+                 max.words=100, random.order=FALSE, rot.per=0.35, 
+                 colors=brewer.pal(8, "Dark2"))) 
+
+
+series %>%
+  anti_join(stop_words_spanish) %>%
+  group_by(book) %>% 
+  count(word, sort = TRUE) %>% filter(book == "machine learning") %>%
+  with(wordcloud(words = word, freq = n, min.freq = 1,
+                 max.words=100, random.order=FALSE, rot.per=0.35, 
+                 colors=brewer.pal(8, "Dark2"))) 
 
 
 # calculemos la frecuencia de cada palabra en toda el conjuto de datos
@@ -173,11 +260,11 @@ frequency <- series %>%
 
 frequency
 
-
+library(ggplot2)
 # visualizacion 
-
+win.graph()
 ggplot(frequency, aes(x = book_words, y = all_words, color = abs(all_words - book_words))) +
-  geom_abline(color = "gray40", lty = 2) +
+  geom_abline(color = "tomato", lty = 2) +
   geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
   geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
   scale_x_log10(labels = scales::percent_format()) +
@@ -204,3 +291,73 @@ frequency %>%
 
 library(tm)
 help(tm)
+
+
+
+
+
+
+
+
+
+
+######################################################
+############################# n-gram analisis #######
+#####################################################
+library(tidyverse)      # data manipulation & plotting
+library(stringr)        # text cleaning and regular expressions
+library(tidytext)
+library(forcats)
+
+
+series <- tibble()
+
+for(i in seq_along(titles)) {
+  
+  clean <- tibble(chapter = seq_along(books[[i]]),
+                  text = books[[i]]) %>%
+    unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+    mutate(book = titles[i]) %>%
+    select(book, everything())
+  
+  series <- rbind(series, clean)
+}
+
+# set factor to keep books in order of publication
+series$book <- factor(series$book, levels = rev(titles))
+
+series
+
+
+
+series %>%
+  count(bigram, sort = TRUE)
+
+
+series %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word) %>%
+  count(word1, word2, sort = TRUE)
+
+
+
+library(tm)
+library(forcats)
+
+stop_words_spanish <- data.frame(word = stopwords("spanish"))
+series %>%
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  filter(!word1 %in% stop_words_spanish$word,
+         !word2 %in% stop_words_spanish$word) %>%
+  count(book, word1, word2, sort = TRUE) %>%
+  unite("bigram", c(word1, word2), sep = " ") %>%
+  group_by(book) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(book = factor(book) %>% forcats::fct_rev()) %>%
+  ggplot(aes(drlib::reorder_within(bigram, n, book), n, fill = book)) +
+  geom_bar(stat = "identity", alpha = .8, show.legend = FALSE) +
+  drlib::scale_x_reordered() +
+  facet_wrap(~ book, ncol = 2, scales = "free") +
+  coord_flip()
