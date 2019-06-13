@@ -199,8 +199,60 @@ frequency %>%
 
 
 
-###########################################
-##################### sentimientos
+###########################################################################
+#---------------------n-gram analisis--------------------------------------
 
-library(tm)
-help(tm)
+library(tidyverse)      # data manipulation & plotting
+library(stringr)        # text cleaning and regular expressions
+library(tidytext)       # provides additional text mining functions
+
+#cargar el objeto de libros
+load("../Downloads/textominado.RData")
+
+titles <- c("ofertas de empleo", "machine learning",
+            "ciencia de datos", "estadística",
+            "inteligencia artificial", "big data")
+
+books <- list(ofertas_empleo, machine_learning,
+              ciencia_de_datos, estadistica,
+              inteligencia_artificial, big_data)
+
+#Extraer bigramas - grupos de dos palabras
+
+series <- tibble()
+for(i in seq_along(titles)) {
+  
+  clean <- tibble(chapter = seq_along(books[[i]]),
+                  text = books[[i]]) %>%
+    unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
+    mutate(book = titles[i]) %>%
+    select(book, everything())
+  
+  series <- rbind(series, clean)
+}
+
+# convertir titulos a factores
+series$book <- factor(series$book, levels = rev(titles))
+series
+
+#análisis de frecuencia
+series %>%count(bigram, sort = TRUE)
+
+#filtrar las stop-words y vizualizar
+
+stop_words_spanish <- data.frame(word = stopwords("spanish"))
+
+series %>% 
+  separate(bigram, c("word1", "word2"), sep = " ") %>%
+  filter(!word1 %in% stop_words_spanish$word,
+         !word2 %in% stop_words_spanish$word) %>%
+  count(book,word1, word2, sort = TRUE) %>%
+  unite("bigram", c(word1, word2), sep = " ") %>%
+  group_by(book) %>%
+  top_n(10) %>%
+  ungroup() %>%
+  mutate(book = factor(book) %>% forcats::fct_rev()) %>%
+  ggplot(aes(reorder(bigram,n), n, fill = book))+
+  geom_bar(stat = "identity", alpha = .8, show.legend = FALSE)+
+  facet_wrap(~ book, ncol = 2, scales = "free") +
+  coord_flip()
