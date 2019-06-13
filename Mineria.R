@@ -5,10 +5,10 @@
 # librerias
 
 # rvest es un nuevo paquete que facilita el raspado
-# (o recolección) de datos de páginas web html, creado por Hadley Wickham
+# (o recolecci??n) de datos de p??ginas web html, creado por Hadley Wickham
 library(rvest)
 
-# El paquete dplyr proporciona una forma bastante ágil
+# El paquete dplyr proporciona una forma bastante ??gil
 # de manejar los ficheros de datos de R
 library(dplyr) 
 
@@ -61,6 +61,62 @@ for (i in 1:length(enlaces)){
 ofertas_empleo <- c(elempleo, opcionempleo, linkedinES) # 68
 
 
+##############################################
+#####ofertas de empleo en estadistica #####
+#############################################
+
+# El empleo EST 
+
+url <- "https://www.elempleo.com/co/ofertas-empleo/trabajo-estadistica/"
+enlaces <- read_html(url) %>%  html_nodes(".area-bind") %>%  xml_attr("data-url")
+enlaces<- paste("https://www.elempleo.com",enlaces, sep = "")
+
+elempleoEST <- vector()
+for (i in seq(1,length(enlaces),2)){
+  leer_html <- read_html(enlaces[i])
+  elempleoEST[i] <- leer_html %>% html_nodes(".description-block span") %>% html_text()
+}
+# Opcion empleo EST
+
+url<-"https://www.opcionempleo.com.co/empleo-estadistico.html"
+enlaces<-read_html(url) %>% html_nodes(".clickable a") %>% html_attr("href")
+enlaces<- paste("https://www.opcionempleo.com.co",enlaces,sep = "")
+
+opcionempleoEST <- vector()
+for (i in 1:length(enlaces)){
+  leer_html <- read_html(enlaces[i])
+  opcionempleoEST[i] <- leer_html %>% html_nodes(".advertise_compact") %>% html_text()
+}
+#Jobisjob EST
+
+url <- "https://www.jobisjob.com.co/estadistica/trabajos"
+enlaces <- read_html(url) %>%  html_nodes(".offer a") %>%  xml_attr("href")
+enlaces<- enlaces[-c(2,5,9,11,13,15)]
+jobisjobEST <- vector()
+for (i in 1:length(enlaces)){
+  leer_html <- read_html(enlaces[i])
+  jobisjobEST[i] <- leer_html %>% html_nodes(".description") %>% html_text()
+}
+
+#Jooble EST
+url<- "https://co.jooble.org/trabajo-profesional-estadistica"
+
+enlaces<-read_html(url) %>% html_nodes(".paddings a") %>% html_attr("href")
+#con expresiones regulares eliminamos los enlaces que contengan company
+patron <- '(company)'
+trash<-c(grep(pattern = patron, enlaces) )
+enlaces<-enlaces[-(trash)]
+
+joobleEST <- vector()
+for (i in 1:length(enlaces)){
+  leer_html <- read_html(enlaces[i])
+  joobleEST[i] <- leer_html %>% html_nodes(".desc_text_paragraph p")%>% html_text()
+}
+
+#Unificando las descripciones de las ofertas de empleo de estadistica
+Ofertas_estadistica<- c(elempleoEST,opcionempleoEST,jobisjobEST,joobleEST)
+
+
 
 ##############################################
 ##### Terminologias ciencias de datos #####
@@ -97,7 +153,7 @@ ciencia_de_datos <- c(CD1, CD2, CD3)
 
 
 #############################
-##########estadística########
+##########estad??stica########
 #############################
 
 url <- "https://es.wikipedia.org/wiki/Estad%C3%ADstica"
@@ -140,18 +196,13 @@ BD3 <- read_html(url) %>% html_nodes(".col-md-8 main") %>% html_text()
 # uniendo infomacion "big data"
 big_data <- c(BD1, BD2, BD3)
 
+##############################################################################
+##############################################################################
+##########Guardamos todas las bases como un obeto RData#######################
+##############################################################################
+##############################################################################
 
-
-##
-ofertas_empleo
-machine_learning
-ciencia_de_datos 
-estadistica
-inteligencia_artificial
-big_data
-
-
-save(ofertas_empleo, machine_learning,ciencia_de_datos,
+save(ofertas_empleo,Ofertas_estadistica, machine_learning,ciencia_de_datos,
      estadistica,inteligencia_artificial, big_data,
      file = "textominado.RData")
 
