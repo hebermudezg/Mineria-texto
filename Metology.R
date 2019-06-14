@@ -1,4 +1,13 @@
 
+######## para un ejemplo #############
+hh <- as.matrix(ofertas_empleo[1])
+removeWords(hh,stopwords("spanish"))
+removePunctuation(hh)
+removeNumbers(hh)
+stripWhitespace(hh)
+
+
+
 ## Metodologia ##
 
 # 1. Recoleccion de la informacion
@@ -10,75 +19,36 @@
 #  - vizualizacion
 # 5. 
 
-
-##### 1 ----
-load(file = "textominado.RData")
-
-
-
-# 2. Formato odenado tibble ------------------------
-text_tb <- tibble(chapter = seq_along(texto), text = texto)
-
-
-
-# 3. Tokenizacion ------------------------- por 1-grama - bigrama
-# tokenizacion por palabra
-tokenizado <- text_tb %>% unnest_tokens(word, text)
-
-
-# n-grama
-bigrams <- text_tb %>%
-  unnest_tokens(bigram, text, token = "ngrams", n = 2)
-bigrams
-
-# NOTA: unnest_tokens
-# 1. divide el texto en palabras simpes
-# 2. quita los signos de puntuación.
-# 3 convierte en minusculas  
-# to_lower = FALSEargumento para desactivarlo
-
-
-
-## Frecuencia de palabra  ----------------------------------------
-tokenizado %>% count(word, sort = TRUE)
-
-
-
-## eliminado palbras stopwords -----------------------------------
-stop_words_spanish <- data.frame(word = stopwords("spanish"))
-tokenizado_ordenado <- tokenizado %>% anti_join(stop_words_spanish ) %>%
-  count(word, sort = TRUE)
-
-
-
-## vizualizacion --------------------------------------------
-# vizualizando freciencias
-ggplot(data = tokenizado_ordenado[1:15,], aes(x=word, y=n)) +
-  geom_bar(stat = "identity",  fill=rainbow(15)) + coord_flip()
-
-
-
 ######################################################
 ################ Analisis con todos los datos ########
 ######################################################
 
-library(dplyr)
-library(tidytext) 
-library(tidyverse)
-library(tm)
-library(wordcloud)
 
 load(file = "textominado.RData")
 
 
-titles <- c("ofertas de empleo", "machine learning",
+library(dplyr)
+library(tidyverse)
+
+library(tidytext) #
+library(tm) #
+library(wordcloud)#
+
+
+# creando marco de datos
+
+titles <- c("ofertas ciencia de datos", "ofertas estadística", "machine learning",
             "ciencia de datos", "estadística",
-            "inteligencia artificial", "big data")
+            "inteligencia artificial", "big data", "analítica")
 
-books <- list(ofertas_empleo, machine_learning,
+books <- list(ofertas_ciencia_de_datos, Ofertas_estadistica, machine_learning,
               ciencia_de_datos, estadistica,
-              inteligencia_artificial, big_data)
+              inteligencia_artificial, big_data, Analitica_de_datos)
 
+
+
+
+## limpiemos los datos antes
 series <- tibble()
 for(i in seq_along(titles)) {
   clean <- tibble(chapter = seq_along(books[[i]]),
@@ -90,9 +60,17 @@ for(i in seq_along(titles)) {
   series <- rbind(series, clean)
 }
 
+
+
+
 # set factor to keep books in order of publication
 series$book <- factor(series$book, levels = rev(titles))
 series
+class(series)
+
+
+
+
 
 
 ## contando frecuencias ------------------------
@@ -108,21 +86,31 @@ series %>%
 stop_words_spanish <- data.frame(word = stopwords("spanish"))
 mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si",
                                     "uso", "debe", "tipo", "años", "pueden", "puede",
-                                    "si", "sí", "NA", "NA NA"))
+                                    "si", "sí", "NA", "NA NA", "1", "2018", "inglés",
+                                    "the", "cómo", "dos"))
 
+# quitnado stopwors y mas palabras
+series <- series %>% anti_join(stop_words_spanish) 
+series <- series %>% anti_join(mas_palabras) 
+
+
+
+
+
+
+# nube de palabras de 1-grama
 #win.graph()
 series %>%
-  anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
-  count(word, sort = TRUE) %>% with(wordcloud(unique(word), n, max.words = 50,
-                                              random.order = F,
-                                              colors = brewer.pal(name = "Dark2", n = 8)))
+  count(word, sort = TRUE) %>% with(wordcloud(unique(word), n, max.words =60,
+                                              random.order = F,colors = brewer.pal(name = "Dark2", n = 8)))
 
 
 
 
-series %>%
-  anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
-  group_by(book) %>%
+
+# conteo agrupando por término
+
+series %>%group_by(book) %>%
   count(word, sort = TRUE) %>%
   top_n(10) 
 
@@ -135,7 +123,6 @@ series %>%
 # visualizacion de la frecuencia absoluta de palabras por términos consultados
 
 series %>%
-  anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
   group_by(book) %>%
   count(word, sort = TRUE) %>%
   top_n(10) %>%
@@ -168,8 +155,20 @@ series$book <- factor(series$book, levels = rev(titles))
 series
 
 
-stop_words_spanish$word <- as.character(stop_words_spanish$word)
-mas_palabras$word <- as.character(mas_palabras$word)
+
+## eliminado stopwords -------------------------------
+## haciendo nube de palabras
+
+stop_words_spanish <- data.frame(word = stopwords("spanish"))
+mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si",
+                                    "uso", "debe", "tipo", "años", "pueden", "puede",
+                                    "si", "sí", "NA", "NA NA", "1", "2018", "inglés",
+                                    "the", "cómo", "dos", "en", "el", "la", "na"))
+
+# quitnado stopwors y mas palabras
+series <- series %>% anti_join(stop_words_spanish) 
+series <- series %>% anti_join(mas_palabras) 
+
 
 series %>% 
   separate(bigram, c("word1", "word2"), sep = " ") %>%
@@ -180,8 +179,8 @@ series %>%
   count(book,word1, word2, sort = TRUE) %>%
   unite("bigram", c(word1, word2), sep = " ") %>%
   group_by(book) %>%
-  top_n(10) %>%
-  ungroup() %>%
+  top_n(8) %>%
+  ungroup() %>% filter(bigram != "NA NA") %>% 
   mutate(book = factor(book) %>% forcats::fct_rev()) %>%
   ggplot(aes(reorder(bigram,n), n, fill = book))+
   geom_bar(stat = "identity", alpha = .8, show.legend = FALSE)+

@@ -2,15 +2,14 @@
 ####------------------- Mineria de texto mediante webscraping---------- ######
 ##############################################################################
 
-# librerias
-
 # rvest es un nuevo paquete que facilita el raspado
-# (o recolecci??n) de datos de p??ginas web html, creado por Hadley Wickham
+# (o recolección) de datos de páginas web html, creado por Hadley Wickham
 library(rvest)
 
-# El paquete dplyr proporciona una forma bastante ??gil
+# El paquete dplyr proporciona una forma bastante ágil
 # de manejar los ficheros de datos de R
 library(dplyr) 
+
 
 
 
@@ -56,9 +55,8 @@ for (i in 1:length(enlaces)){
   linkedinES[i] <- leer_html %>% html_nodes(".description__text--rich") %>% html_text()
 }
 
-
 # uniedo todas las cadenas de texto recolectadas sobre "ofertas de empleo ciencia de datos"
-ofertas_empleo <- c(elempleo, opcionempleo, linkedinES) # 68
+ofertas_ciencia_de_datos <- c(elempleo, opcionempleo, linkedinES) # 68
 
 
 ##############################################
@@ -76,8 +74,8 @@ for (i in seq(1,length(enlaces),2)){
   leer_html <- read_html(enlaces[i])
   elempleoEST[i] <- leer_html %>% html_nodes(".description-block span") %>% html_text()
 }
-# Opcion empleo EST
 
+# Opcion empleo EST
 url<-"https://www.opcionempleo.com.co/empleo-estadistico.html"
 enlaces<-read_html(url) %>% html_nodes(".clickable a") %>% html_attr("href")
 enlaces<- paste("https://www.opcionempleo.com.co",enlaces,sep = "")
@@ -87,8 +85,8 @@ for (i in 1:length(enlaces)){
   leer_html <- read_html(enlaces[i])
   opcionempleoEST[i] <- leer_html %>% html_nodes(".advertise_compact") %>% html_text()
 }
-#Jobisjob EST
 
+#Jobisjob EST
 url <- "https://www.jobisjob.com.co/estadistica/trabajos"
 enlaces <- read_html(url) %>%  html_nodes(".offer a") %>%  xml_attr("href")
 enlaces<- enlaces[-c(2,5,9,11,13,15)]
@@ -132,9 +130,16 @@ url <- "https://www.sas.com/es_co/insights/analytics/machine-learning.html"
 ML2 <- read_html(url) %>% html_nodes(".cq-colctrl-lt0 , #machine-learning-usersscroll p , h4 , h4 .txt-white , #machine-learning-importancescroll p , h2+ p , p .txt-large") %>% html_text()
 url <- "https://es.wikipedia.org/wiki/Aprendizaje_autom%C3%A1tico"
 ML3 <- read_html(url) %>% html_nodes("ul+ p , p:nth-child(7) , h3+ p , p+ p , p:nth-child(63) , li li+ li , .mw-redirect , p:nth-child(71) , dd , p:nth-child(1)") %>% html_text()
+url <- "https://blog.adext.com/machine-learning-guia-completa/"
+ML4 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://aws.amazon.com/es/machine-learning/"
+ML5 <- read_html(url) %>% html_nodes("p, b") %>% html_text()
+url <- "https://retina.elpais.com/retina/2017/10/19/innovacion/1508392516_816211.html"
+ML6 <- read_html(url) %>% html_nodes("p , .articulo-subtitulo") %>% html_text()
+
 
 # uniendo la infomacion sobre "machine learning"
-machine_learning <-c(ML1,ML2,ML3)
+machine_learning <-c(ML1,ML2,ML3, ML4, ML5, ML6)
 
 
 #############################
@@ -147,14 +152,20 @@ url <- "https://medium.com/datos-y-ciencia/qu%C3%A9-diablos-es-ciencia-de-datos-
 CD2 <- read_html(url) %>% html_nodes(".sectionLayout--fullWidth+ .sectionLayout--insetColumn , #58ff") %>% html_text()
 url <- "https://es.wikipedia.org/wiki/Ciencia_de_datos"
 CD3 <- read_html(url) %>% html_nodes("p+ ol li , p+ ul li , p") %>% html_text()
+url <- "https://searchdatacenter.techtarget.com/es/definicion/Ciencia-de-datos"
+CD4 <-  read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://www.pragma.com.co/academia/conceptos/conoce-el-mundo-de-la-ciencia-de-datos"
+CD5 <-  read_html(url) %>% html_nodes("p") %>% html_text()
+
+
 
 # uniendo la informacion sobre "ciencia de datos"
-ciencia_de_datos <- c(CD1, CD2, CD3)
+ciencia_de_datos <- c(CD1, CD2, CD3, CD4, CD5)
 
 
-#############################
-##########estad??stica########
-#############################
+###############################
+########## estadística ########
+###############################
 
 url <- "https://es.wikipedia.org/wiki/Estad%C3%ADstica"
 E1 <- read_html(url) %>% html_nodes("td li , h3+ ul li , ul+ ul li , p+ ul li , p") %>% html_text()
@@ -162,9 +173,16 @@ url <- "https://economipedia.com/definiciones/estadistica.html"
 E2 <- read_html(url) %>% html_nodes(".entry-content li , .entry-content p , #main strong") %>% html_text()
 url <- "https://www.significados.com/estadistica/"
 E3 <- read_html(url) %>% html_nodes("p:nth-child(4) , h3+ p , h2+ p , .desktop-only+ p") %>% html_text()
+url <- "https://www.monografias.com/trabajos57/aprendizaje-estadistico/aprendizaje-estadistico.shtml"
+E4 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://economipedia.com/definiciones/estadistica.html"
+E5 <- read_html(url) %>% html_nodes("p:nth-child(4) , h3+ p , h2+ p , .desktop-only+ p") %>% html_text()
 
 #uniendo infomacion sobre "estadistica"
-estadistica <- c(E1, E2, E3)
+estadistica <- c(E1, E2, E3, E4, E5)
+
+
+
 
 
 ##########################################
@@ -177,9 +195,14 @@ url <- "https://searchdatacenter.techtarget.com/es/definicion/Inteligencia-artif
 IA2 <- read_html(url) %>% html_nodes("p") %>% html_text()
 url <- "https://www.muyinteresante.es/tecnologia/articulo/ventajas-y-riesgos-de-la-inteligencia-artificial-651449483429"
 IA3 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://www.iberdrola.com/te-interesa/tecnologia/que-es-inteligencia-artificial"
+IA4 <- read_html(url) %>% html_nodes(".container") %>% html_text()
+url <- "http://www.fgcsic.es/lychnos/es_es/articulos/inteligencia_artificial"
+IA5 <- read_html(url) %>% html_nodes(".texto") %>% html_text()
+
 
 # uniendo informacion sobre IA
-inteligencia_artificial <- c(IA1, IA2, IA3)
+inteligencia_artificial <- c(IA1, IA2, IA3, IA4, IA5)
 
 
 ##########################################
@@ -193,18 +216,70 @@ BD2 <- read_html(url) %>% html_nodes(".c89w1 p , #cw31panel-0_0 p , .c81v0 li , 
 url <- "https://www.bit.es/knowledge-center/que-es-big-data-introduccion-a-big-data/"
 BD3 <- read_html(url) %>% html_nodes(".col-md-8 main") %>% html_text()
 
-# uniendo infomacion "big data"
-big_data <- c(BD1, BD2, BD3)
+url <- "https://www.powerdata.es/big-data"
+BD4 <- read_html(url) %>% html_nodes(".row-fluid") %>% html_text()
+url <- "https://es.wikipedia.org/wiki/Macrodatos"
+BD5 <- read_html(url) %>% html_nodes("#content") %>% html_text()
 
-##############################################################################
+
+# uniendo infomacion "big data"
+big_data <- c(BD1, BD2, BD3, BD4, BD5)
+
+
+
+
+
+
+
+##########################################
+##########Analitica de datos #############
+#########################################
+
+
+url <- "https://www.analiticanegocios.com/analitica-de-datos/"
+AD1 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://www.kienyke.com/tendencias/tecnologia/analitica-de-datos-que-es-y-como-vamos-en-el-tema-de-colombia"
+AD2 <-  read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://searchdatacenter.techtarget.com/es/guia/Principios-de-la-analitica-de-datos-una-guia-esencial"
+AD3 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://ticnegocios.camaravalencia.com/servicios/tendencias/los-efectos-positivos-de-la-analitica-de-datos-en-la-empresa/"
+AD4 <- read_html(url) %>% html_nodes("p") %>% html_text()
+url <- "https://blog.es.logicalis.com/analytics/la-anal%C3%ADtica-de-datos-en-el-coraz%C3%B3n-de-la-transformaci%C3%B3n-digital"
+AD5 <- read_html(url) %>% html_nodes("p") %>% html_text()
+
+Analitica_de_datos <- c(AD1, AD2, AD3, AD4, AD5)
+
+
+
+
+
+
+
+####################################################################
+######################### Analisis de redes sociales ###############
+####################################################################
+
+### twitter 
+
+
+
+
+
+
+
+
+
 ##############################################################################
 ##########Guardamos todas las bases como un obeto RData#######################
 ##############################################################################
-##############################################################################
 
-save(ofertas_empleo,Ofertas_estadistica, machine_learning,ciencia_de_datos,
-     estadistica,inteligencia_artificial, big_data,
+save(ofertas_ciencia_de_datos, Ofertas_estadistica, machine_learning,ciencia_de_datos,
+     estadistica,inteligencia_artificial, big_data, Analitica_de_datos,
      file = "textominado.RData")
+
+
+
+
 
 
 

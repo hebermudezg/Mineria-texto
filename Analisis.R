@@ -382,6 +382,7 @@ nov_text <- cbind(
   as.matrix
 
 dim(nov_text)
+class(nov_text)
 
 nov_text <- gsub("[[:cntrl:]]", " ", nov_text)
   
