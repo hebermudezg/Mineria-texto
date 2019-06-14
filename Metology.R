@@ -25,17 +25,15 @@ stripWhitespace(hh)
 
 
 load(file = "textominado.RData")
+#library(tidyverse)
 
-
-library(dplyr)
-library(tidyverse)
-
+library(dplyr)#
 library(tidytext) #
 library(tm) #
-library(wordcloud)#
+library(wordcloud) #
+library(ggplot2) #
 
-
-# creando marco de datos
+# Creando marco de datos. 
 
 titles <- c("ofertas ciencia de datos", "ofertas estadística", "machine learning",
             "ciencia de datos", "estadística",
@@ -56,14 +54,11 @@ for(i in seq_along(titles)) {
     unnest_tokens(word, text) %>%
     mutate(book = titles[i]) %>%
     select(book, everything())
-  
   series <- rbind(series, clean)
 }
 
 
-
-
-# set factor to keep books in order of publication
+# convirtiendo a factor los documentos(terminos)
 series$book <- factor(series$book, levels = rev(titles))
 series
 class(series)
@@ -92,9 +87,6 @@ mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si
 # quitnado stopwors y mas palabras
 series <- series %>% anti_join(stop_words_spanish) 
 series <- series %>% anti_join(mas_palabras) 
-
-
-
 
 
 
