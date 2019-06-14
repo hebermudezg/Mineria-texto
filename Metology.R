@@ -33,7 +33,7 @@ bigrams
 
 # NOTA: unnest_tokens
 # 1. divide el texto en palabras simpes
-# 2. quita los signos de puntuación.
+# 2. quita los signos de puntuaci??n.
 # 3 convierte en minusculas  
 # to_lower = FALSEargumento para desactivarlo
 
@@ -65,17 +65,18 @@ ggplot(data = tokenizado_ordenado[1:15,], aes(x=word, y=n)) +
 library(dplyr)
 library(tidytext) 
 library(tidyverse)
-library(tm)
 library(wordcloud)
+library(stringr) 
+library(tm)
 
 load(file = "textominado.RData")
 
 
-titles <- c("ofertas de empleo", "machine learning",
-            "ciencia de datos", "estadística",
+titles <- c("ofertas de empleo","ofertas de estadistica", "machine learning",
+            "ciencia de datos", "estad??stica",
             "inteligencia artificial", "big data")
 
-books <- list(ofertas_empleo, machine_learning,
+books <- list(ofertas_empleo, Ofertas_estadistica ,machine_learning,
               ciencia_de_datos, estadistica,
               inteligencia_artificial, big_data)
 
@@ -90,27 +91,18 @@ for(i in seq_along(titles)) {
   series <- rbind(series, clean)
 }
 
-# set factor to keep books in order of publication
-series$book <- factor(series$book, levels = rev(titles))
-series
-
-
-## contando frecuencias ------------------------
-
+## #  contando palabras m??s comunes en todo el texto de la serie SIN FILTRO
 series %>%
   count(word, sort = TRUE)
 
-
-
-## eliminado stopwords -------------------------------
-## haciendo nube de palabras
-
+#### Definimos las stop words en espa??ol
 stop_words_spanish <- data.frame(word = stopwords("spanish"))
-mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si",
-                                    "uso", "debe", "tipo", "años", "pueden", "puede",
-                                    "si", "sí", "NA", "NA NA"))
+mas_palabras <- data.frame(word = c("tener", "cada", "ser", "as??", "hacer", "si",
+                                    "uso", "debe", "tipo", "a??os", "pueden", "puede",
+                                    "si", "s??", "NA", "NA NA",NA,"requiere",
+                                    "oportunidades","aqu??"))
 
-#win.graph()
+#win.graph() Hacemos nuestra nube de palabras mas frecuentes
 series %>%
   anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
   count(word, sort = TRUE) %>% with(wordcloud(unique(word), n, max.words = 50,
@@ -119,7 +111,7 @@ series %>%
 
 
 
-
+# contando palabras m??s comunes agrupados por terminos y CON FILTRO
 series %>%
   anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
   group_by(book) %>%
@@ -131,8 +123,7 @@ series %>%
 
 
 ####### palabra individual
-# Podemos visualizar esto con
-# visualizacion de la frecuencia absoluta de palabras por términos consultados
+# visualizacion de la frecuencia absoluta de palabras por terminos consultados
 
 series %>%
   anti_join(stop_words_spanish) %>% anti_join(mas_palabras) %>%
@@ -149,7 +140,7 @@ series %>%
 
 ########################################
 ################ bi-grama  #############
-
+########################################
 
 series <- tibble()
 for(i in seq_along(titles)) {
@@ -158,18 +149,15 @@ for(i in seq_along(titles)) {
                   text = books[[i]]) %>%
     unnest_tokens(bigram, text, token = "ngrams", n = 2) %>%
     mutate(book = titles[i]) %>%
-    select(book, everything())
+    dplyr::select(book, everything())
   
   series <- rbind(series, clean)
 }
 
 # convertir titulos a factores
 series$book <- factor(series$book, levels = rev(titles))
-series
 
-
-stop_words_spanish$word <- as.character(stop_words_spanish$word)
-mas_palabras$word <- as.character(mas_palabras$word)
+#Vizualizar bigrama con filtros, agrupado por terminologias
 
 series %>% 
   separate(bigram, c("word1", "word2"), sep = " ") %>%
@@ -189,13 +177,6 @@ series %>%
   coord_flip()
 
 
-
-
-
-
-
-
-
 ##########################################################
 ################## Nubes por categoria ##################
 ########################################################
@@ -203,6 +184,7 @@ series %>%
 
 series %>%
   anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras) %>%
   group_by(book) %>% 
   count(word, sort = TRUE) %>% filter(book == "ofertas de empleo") %>%
   with(wordcloud(words = word, freq = n, min.freq = 1,
@@ -213,6 +195,7 @@ series %>%
 
 series %>%
   anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras) %>%
   group_by(book) %>% 
   count(word, sort = TRUE) %>% filter(book == "big data") %>%
   with(wordcloud(words = word, freq = n, min.freq = 1,
@@ -223,8 +206,9 @@ series %>%
 
 series %>%
   anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras) %>%
   group_by(book) %>% 
-  count(word, sort = TRUE) %>% filter(book == "estadística") %>%
+  count(word, sort = TRUE) %>% filter(book == "estad??stica") %>%
   with(wordcloud(words = word, freq = n, min.freq = 1,
                  max.words=100, random.order=FALSE, rot.per=0.35, 
                  colors=brewer.pal(8, "Dark2"))) 
@@ -232,6 +216,7 @@ series %>%
 
 series %>%
   anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras) %>%
   group_by(book) %>% 
   count(word, sort = TRUE) %>% filter(book == "machine learning") %>%
   with(wordcloud(words = word, freq = n, min.freq = 1,
@@ -243,21 +228,23 @@ series %>%
 # y lo comparamos con cada terminos
 
 
-# calculate percent of word use across all novels
-potter_pct <- series %>%
+# porcentaje de uso de palabras en todos las terminologias
+percent_all <- series %>%
   anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras)  %>%
   count(word) %>%
   transmute(word, all_words = n / sum(n))
+percent_all
 
-# calculate percent of word use within each novel
+# porcentaje de frecuencia de palabras cada terminologia
 frequency <- series %>%
   anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras)  %>%
   count(book, word) %>%
   mutate(book_words = n / sum(n)) %>%
   left_join(potter_pct) %>%
   arrange(desc(book_words)) %>%
   ungroup()
-
 frequency
 
 library(ggplot2)
@@ -272,7 +259,7 @@ ggplot(frequency, aes(x = book_words, y = all_words, color = abs(all_words - boo
   scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
   facet_wrap(~ book, ncol = 2) +
   theme(legend.position="none") +
-  labs(y = "Términos consultados", x = NULL)
+  labs(y = "T??rminos consultados", x = NULL)
 
 
 
