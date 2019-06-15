@@ -1,10 +1,13 @@
 
 ######## para un ejemplo #############
-hh <- as.matrix(ofertas_empleo[1])
+hh <- as.matrix(ofertas_ciencia_de_datos[1])
 removeWords(hh,stopwords("spanish"))
 removePunctuation(hh)
 removeNumbers(hh)
 stripWhitespace(hh)
+hh <- tibble(hh)
+hh %>% unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
 
 ######################################################
 ################ Analisis con todos los datos ########
@@ -24,9 +27,9 @@ load(file = "textominado.RData")
 
 # Creando marco de datos. 
 
-titles <- c("ofertas ciencia de datos", "ofertas estad??stica", "machine learning",
-            "ciencia de datos", "estad??stica",
-            "inteligencia artificial", "big data", "anal??tica")
+titles <- c("ofertas ciencia de datos", "ofertas estadística", "machine learning",
+            "ciencia de datos", "estadística",
+            "inteligencia artificial", "big data", "analítica")
 
 books <- list(ofertas_ciencia_de_datos, Ofertas_estadistica, machine_learning,
               ciencia_de_datos, estadistica,
@@ -36,11 +39,11 @@ books <- list(ofertas_ciencia_de_datos, Ofertas_estadistica, machine_learning,
 
 series <- tibble()
 for(i in seq_along(titles)) {
-  clean <- tibble(chapter = seq_along(books[[i]]),
+  clean <- tibble(indice = seq_along(books[[i]]),
                   text = books[[i]]) %>%
     unnest_tokens(word, text) %>%
-    mutate(book = titles[i]) %>%
-    dplyr::select(book, everything())
+    mutate(terminos = titles[i]) %>%
+    dplyr::select(terminos, everything())
   
   series <- rbind(series, clean)
 }
@@ -57,14 +60,14 @@ series %>%
 
 #### Definimos las stop words en espa??ol################################################
 stop_words_spanish <- data.frame(word = stopwords("spanish"))
-mas_palabras <- data.frame(word = c("tener", "cada", "ser", "as??", "hacer", "si",
-                                    "uso", "debe", "tipo", "a??os", "pueden", "puede",
-                                    "si", "s??", "NA", "NA NA",NA,"requiere",
+mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si",
+                                    "uso", "debe", "tipo", "años", "pueden", "puede",
+                                    "si", "sí", "NA", "NA NA",NA,"requiere",
                                     "oportunidades","aqui", "ofertas",
                                     "horas", "importante","nuevo","id",
                                     "sector","trabajo","personal","salario",
                                     "nuevos","dos","requisition","id","contrato",
-                                    "a??os","ai","1", "2018"))
+                                    "años","ai","1", "2018", "cómo", "the", "lunes", "viernes"))
 ########################################################################################
 
 #Hacemos nuestra nube de palabras mas frecuentes, con Filtro
@@ -76,7 +79,7 @@ series %>%
                  max.words = 50,
                  random.order = F, colors = brewer.pal(name = "Dark2", n = 8)))
 
-# contando palabras m??s comunes en todo el texto de la serie, pero agrupados por 
+# contando palabras mas comunes en todo el texto de la serie, pero agrupados por 
 # terminos y CON FILTRO
 series %>%
   anti_join(stop_words_spanish) %>%
@@ -91,7 +94,7 @@ series %>%
   ggplot(aes(reorder(word, text_order), n, fill = book)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ book, scales = "free_y") +
-  labs(x = "T??rminos", y = "Frecuencia") +
+  labs(x = "Términos", y = "Frecuencia") +
   coord_flip() +
   theme(legend.position="none")
 
@@ -110,7 +113,7 @@ series %>%
   ggplot(aes(reorder(word, text_order), n, fill = book)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ book, scales = "free_y") +
-  labs(x = "T??rminos", y = "Frecuencia") +
+  labs(x = "Términos", y = "Frecuencia") +
   coord_flip() +
   theme(legend.position="none")
 
@@ -133,7 +136,7 @@ for(i in seq_along(titles)) {
 # convertir titulos a factores
 series$book <- factor(series$book, levels = rev(titles))
 
-#Vizualizar bigrama con filtros, agrupado por terminologias
+#Visualizar bigrama con filtros, agrupado por terminologias
 series %>% 
   separate(bigram, c("word1", "word2"), sep = " ") %>%
   filter(!word1 %in% stop_words_spanish$word,
@@ -163,6 +166,7 @@ series %>%
   filter(!word1 %in% mas_palabras$word,
          !word2 %in% mas_palabras$word) %>% 
   count(word1, word2, sort = TRUE)
+
 
 
 ###########################################################
@@ -203,12 +207,7 @@ ggplot(frequency, aes(x = book_words, y = all_words, color = abs(all_words - boo
   scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
   facet_wrap(~ book, ncol = 2) +
   theme(legend.position="none") +
-  labs(y = "T??rminos consultados", x = NULL)
-
-
-
-
-
+  labs(y = "Términos consultados", x = NULL)
 
 
 
