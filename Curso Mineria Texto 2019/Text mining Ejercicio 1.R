@@ -6,6 +6,11 @@ library(lubridate) #sirve para trabajar con formatos de fecha
 library(bit64) #sirve para trabajar con enteros largos
 library(data.table) #sirve para trabajar con big data
 
+
+
+
+
+
 #vamos construyendo el request
 
 #declaramos el endpoint
@@ -28,11 +33,11 @@ apikey.webhose
 #formato
 format.v <- "json" 
 format.v
-q.v <- URLencode(q.v)  # esto permite reemplazar los espacios en blanco por código
+q.v <- URLencode(q.v)  # esto permite reemplazar los espacios en blanco por c?digo
 
 #timestamp
 #la composicion del tiemstamp no es inmediata. Debemos declarar que vamos a buscar 
-#los últimos 30 días de datos pero en formato UNIX milliseconds
+#los ?ltimos 30 d?as de datos pero en formato UNIX milliseconds
 #para poderlo hacer primero encuentro la fecha actual
 
 now <- Sys.time()
@@ -64,7 +69,7 @@ response <- GET(http,
 
 ########RESPONSE########
 
-#ahora vamos a analizar la respuesta que nos dió el endpoint 
+#ahora vamos a analizar la respuesta que nos di? el endpoint 
 #responde status code
 status_code(response)
 http_error(response)
@@ -179,7 +184,7 @@ while(nout == 100){
   print(msg)
 
 }
-# esto realiza un append por filas con la coincidencia entre colomnas, las columnas adiccionales se agragn a la derecha y en aquelos appends que no las tienen queda información vacía.
+# esto realiza un append por filas con la coincidencia entre colomnas, las columnas adiccionales se agragn a la derecha y en aquelos appends que no las tienen queda informaci?n vac?a.
 
 #EJERCICIO 1
 
@@ -195,8 +200,8 @@ while(nout == 100){
 ## selecciones de columnas multiplas
 articles.flt.dt[, list(uuid, crawled)]
 articles.flt.dt[, .(uuid, crawled)] #esto es equivalente
-articles.flt.dt[, c("uuid", "crawled")] #esto es como se haría con data frames
-articles.flt.dt[, c(uuid, crawled)] #esto con data frames daría error
+articles.flt.dt[, c("uuid", "crawled")] #esto es como se har?a con data frames
+articles.flt.dt[, c(uuid, crawled)] #esto con data frames dar?a error
 
 
 ## operaciones con columnas
