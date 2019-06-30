@@ -36,7 +36,7 @@ searchTwitter("seleccion colombia", n = 10, lang = "es")
 
 
 
-tweets <- read.csv("nombre del archivo.csv", sep =";") #cargar los datos al tweets ("nombre del archivo.csv", separador)
+#tweets <- read.csv("nombre del archivo.csv", sep =";") #cargar los datos al tweets ("nombre del archivo.csv", separador)
 load(file = "textominado.RData")
 
 

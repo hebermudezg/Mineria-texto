@@ -1,3 +1,7 @@
+#
+# Definiendo algunas funciones para graficar adecuadamente. 
+
+
 reorder_within <- function(x, by, within, fun = mean, sep = "___", ...) {
   new_x <- paste(x, within, sep = sep)
   stats::reorder(new_x, by, FUN = fun)
@@ -19,7 +23,11 @@ scale_y_reordered <- function(..., sep = "___") {
   ggplot2::scale_y_discrete(labels = function(x) gsub(reg, "", x), ...)
 }
 
-
+hacer_nubes <- function(n){
+  library(wordcloud)
+  n <- wordcloud(n$word, n$n, min.freq = 2, random.order = FALSE,
+                 random.color = FALSE, max.words = 500, colors = brewer.pal(8,"Dark2" ))
+}
 
 
 
@@ -49,11 +57,12 @@ library(stringr)
 library(tm)
 library(forcats)
 
-# Cargar terminologias
+# Cargar terminologias (documentos tecuperados de las busquedas en internet)
 load(file = "textominado.RData")
 
-# Creando marco de datos. 
 
+
+# Creando marco de datos. (formato ordenado tibble y toqenizar)
 titles <- c("ofertas ciencia de datos", "ofertas estadística", "machine learning",
             "ciencia de datos", "estadística",
             "inteligencia artificial", "big data", "analítica")
@@ -79,13 +88,14 @@ for(i in seq_along(titles)) {
 
 # set factor to keep books in order of publication
 series$book <- factor(series$book, levels = rev(titles))
-
 series
 
 
 ## contando palabras mas comunes en todo el texto de la serie SIN FILTRO
-series %>%
+nub <- series %>%
   count(word, sort = TRUE)
+
+
 
 #### Definimos las stop words en espa??ol################################################
 stop_words_spanish <- data.frame(word = stopwords("spanish"))
@@ -100,16 +110,20 @@ mas_palabras <- data.frame(word = c("tener", "cada", "ser", "así", "hacer", "si
 ########################################################################################
 
 #Hacemos nuestra nube de palabras mas frecuentes, con Filtro
-series %>%
+#win.graph()
+nub2 <- series %>%
   anti_join(stop_words_spanish) %>%
   anti_join(mas_palabras) %>% 
   count(word, sort = TRUE) %>%
   with(wordcloud(unique(word), n, 
-                 max.words = 50,
+                 max.words = 100,
                  random.order = F, colors = brewer.pal(name = "Dark2", n = 8)))
 
-
-
+nub2 <- series %>%
+  anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras) %>% 
+  count(word, sort = TRUE) 
+hacer_nubes(nub2)
 
 ################### grafico 1-grama ###############################
 
