@@ -89,12 +89,19 @@ library(lubridate)
 library(ggplot2)
 library(scales)
 library(reshape2)
+nrc_es<- read.csv("bases/nrc_es.csv")
+colnames(nrc_es)<-c("word","sentiment")
+#file
+Tweets<-iconv(tweets$text, to = 'utf-8-mac')
 #obtener sentimientos lexico nrc
-tuits_nrc <- 
-  tweets %>%
-  unnest_tokens(input = "text", output = "Palabra") %>%
-  inner_join(afinn, ., by = "Palabra") %>%
-  mutate(Tipo = ifelse(Puntuacion > 0, "Positiva", "Negativa")) %>% 
-  rename("Candidato" = screen_name)
+s<- get_nrc_sentiment(Tweets, language = "spanish")
+#barplot
+barplot(colSums(s),las=2, col = rainbow(10),
+        ylab = "Conteo",
+        main =  "Sentimentos score ofertas laborales twitter")
+
+
+
+
 
 
