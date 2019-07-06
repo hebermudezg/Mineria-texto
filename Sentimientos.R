@@ -11,17 +11,14 @@ library(dplyr)
 library(tm)
 
 # Cargar terminologias
-load(file = "textominado.RData")
+load(file = "bases/textominado.RData")
+tweets<-read.csv("bases/tweets.csv")
 
 # Creando marco de datos. 
 
-titles <- c("ofertas ciencia de datos", "ofertas estad??stica", "machine learning",
-            "ciencia de datos", "estad??stica",
-            "inteligencia artificial", "big data", "anal??tica")
-
-books <- list(ofertas_ciencia_de_datos, Ofertas_estadistica, machine_learning,
-              ciencia_de_datos, estadistica,
-              inteligencia_artificial, big_data, Analitica_de_datos)
+titles <- c("tweets ofertas ciencia de datos")
+tweets_ofertas<- as.character(tweets$text)
+books <- list(tweets_ofertas)
 
 ## Tokenizar 
 
@@ -41,11 +38,6 @@ series$book <- factor(series$book, levels = rev(titles))
 series
 class(series)
 
-
-## contando palabras mas comunes en todo el texto de la serie SIN FILTRO
-series %>%
-  count(word, sort = TRUE)
-
 #### Definimos las stop words en espa??ol################################################
 stop_words_spanish <- data.frame(word = stopwords("spanish"))
 mas_palabras <- data.frame(word = c("tener", "cada", "ser", "as??", "hacer", "si",
@@ -55,10 +47,32 @@ mas_palabras <- data.frame(word = c("tener", "cada", "ser", "as??", "hacer", "si
                                     "horas", "importante","nuevo","id",
                                     "sector","trabajo","personal","salario",
                                     "nuevos","dos","requisition","id","contrato",
-                                    "a??os","ai","1", "2018","2"))
+                                    "a??os","ai","1", "2018","2","2026",
+                                    "u","00f3","rt","https","t.co","00ed",
+                                    "amio","n","00e1","ene","n"))
 ########################################################################################
 
-
+## contando palabras mas comunes en todo el texto de la serie CON FILTRO
+series %>%
+  count(word, sort = TRUE)
+# contando palabras mas comunes en todo el texto de la serie, pero agrupados por 
+# terminos y CON FILTRO
+series %>%
+  anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras)  %>% 
+  group_by(book) %>%
+  count(word, sort = TRUE) %>%
+  top_n(10) %>% 
+  # visualizacion de la frecuencia absoluta de palabras por terminos consultados
+  ungroup() %>%
+  mutate(book = factor(book, levels = titles),
+         text_order = nrow(.):1) %>%
+  ggplot(aes(reorder(word, text_order), n, fill = book)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ book, scales = "free_y") +
+  labs(x = "T??rminos", y = "Frecuencia") +
+  coord_flip() +
+  theme(legend.position="none")
 #===============================================================================
 #==========================Lexico - sentimientos en espaniol====================
 #===============================================================================
@@ -128,7 +142,7 @@ bing_word_counts %>%
   coord_flip()
 
 #==============================================================================
-#======================Con unidades mas grandes================================
+#======================Con unidades mas grandes NO HACER:SOLO PARA CAPITULOS============================
 #===========================Lexico afinn=======================================
 
 # Estos algoritmos tratan de entender que:
@@ -136,13 +150,13 @@ bing_word_counts %>%
 # "No estoy teniendo un buen d??a"
 # Es una frase triste, no feliz, debido a la negaci??n.
 
-tibble(text = ofertas_ciencia_de_datos) %>% 
+tibble(text = tweets_ofertas) %>% 
   unnest_tokens(sentence, text, token = "sentences")
 
 # Dividir ofertas_ciencia_de_datos por cap??tulo y oraci??n.
 
-ps_sentences <- tibble(chapter = 1:length(ofertas_ciencia_de_datos),
-                       text = ofertas_ciencia_de_datos) %>% 
+ps_sentences <- tibble(chapter = 1:length(tweets_ofertas),
+                       text = tweets_ofertas) %>% 
   unnest_tokens(sentence, text, token = "sentences")
 
 
@@ -173,7 +187,3 @@ ggplot(book_sent, aes(index, factor(chapter, levels = sort(unique(chapter), decr
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position = "top")
-
-#===============================================================================
-#======================Con unidades mas grandes================================
-#===============================================================================

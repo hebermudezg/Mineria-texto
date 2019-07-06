@@ -96,9 +96,10 @@ Tweets<-iconv(tweets$text, to = 'utf-8-mac')
 #obtener sentimientos lexico nrc
 s<- get_nrc_sentiment(Tweets, language = "spanish")
 #barplot
-barplot(colSums(s),las=2, col = rainbow(10),
+barplot(sort(colSums(s)),las=2, col = c("red",topo.colors(5),"blue",
+                                        "black","blue","yellow"),
         ylab = "Conteo",
-        main =  "Sentimentos score ofertas laborales twitter")
+        main =  "Sentimentos score ofertas laborales de estadistica twitter")
 
 
 

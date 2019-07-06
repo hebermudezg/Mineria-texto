@@ -5,37 +5,33 @@ library(lubridate)
 library(zoo)
 library(scales)
 
-#download.file("https://raw.githubusercontent.com/jboscomendoza/rpubs/master/sentimientos_afinn/tuits_candidatos.csv",
-#              "tuits_candidatos.csv")
-#download.file("https://raw.githubusercontent.com/jboscomendoza/rpubs/master/sentimientos_afinn/lexico_afinn.en.es.csv",
- #             "lexico_afinn.en.es.csv")
-
-tuits <- read.csv("bases/tuits_candidatos.csv", stringsAsFactors = F,
+tuits <- read.csv("bases/tweets.csv", stringsAsFactors = F,
                   encoding = "UTF-8") %>%  tbl_df()
-afinn <- read.csv("bases/lexico_afinn.en.es.csv", stringsAsFactors = F, fileEncoding = "latin1") %>% 
+
+afinn <- read.csv("bases/lexico_afinn.en.es.csv", stringsAsFactors = F,
+                  fileEncoding = "latin1") %>% 
   tbl_df()
 
 #filtrar por anio
 tuits <- tuits %>%
-  separate(created_at, into = c("Fecha", "Hora"), sep = " ") %>%
-  separate(Fecha, into = c("Dia", "Mes", "Periodo"), sep = "/") %>%
-  filter(Periodo == 2018)
+  separate(created, into = c("Fecha", "Hora"), sep = " ") %>%
+  separate(Fecha, into = c("Periodo","Mes","Dia" ), sep = "-") %>%
+  filter(Periodo == 2019)
 
 #tokenizar
-tuits_afinn <- 
-  tuits %>%
+tuits_afinn <- tuits %>% 
   unnest_tokens(input = "text", output = "Palabra") %>%
   inner_join(afinn, ., by = "Palabra") %>%
-  mutate(Tipo = ifelse(Puntuacion > 0, "Positiva", "Negativa")) %>% 
-  rename("Candidato" = screen_name)
+  mutate(Tipo = ifelse(Puntuacion > 0, "Positiva", "Negativa")) 
+  #rename("Candidato" = screen_name)
 
 tuits <-
   tuits_afinn %>%
-  group_by(status_id) %>%
+  group_by(id) %>%
   summarise(Puntuacion_tuit = mean(Puntuacion)) %>%
   left_join(tuits, ., by = "status_id") %>% 
-  mutate(Puntuacion_tuit = ifelse(is.na(Puntuacion_tuit), 0, Puntuacion_tuit)) %>% 
-  rename("Candidato" = screen_name)
+  mutate(Puntuacion_tuit = ifelse(is.na(Puntuacion_tuit), 0, Puntuacion_tuit))  
+  #rename("Candidato" = screen_name)
 
 # Total
 tuits_afinn %>%
