@@ -58,7 +58,7 @@ library(tm)
 library(forcats)
 
 # Cargar terminologias (documentos tecuperados de las busquedas en internet)
-load(file = "textominado.RData")
+load(file = "bases/textominado.RData")
 
 
 
@@ -210,14 +210,37 @@ series %>%
 ################## Analisis de correlaciones ###################
 ###############################################################
 
+load(file = "bases/textominado.RData")
+
 
 titles <- c("ofertas ciencia de datos", "ofertas estadística", "machine learning",
             "ciencia de datos", "estadística",
             "inteligencia artificial", "big data", "analítica")
 
+
+limpiartexto <- function(cadena){
+  library(tm)
+  cadena <- removeNumbers(cadena)
+  cadena <- removePunctuation(cadena)
+  return(cadena)
+}
+
+
+ofertas_ciencia_de_datos <- limpiartexto (ofertas_ciencia_de_datos)
+Ofertas_estadistica <- limpiartexto (Ofertas_estadistica)
+machine_learning <- limpiartexto (machine_learning)
+ciencia_de_datos <- limpiartexto (ciencia_de_datos)
+estadistica <- limpiartexto(estadistica)
+inteligencia_artificial <- limpiartexto(inteligencia_artificial)
+big_data <- limpiartexto (big_data)
+Analitica_de_datos <- limpiartexto (Analitica_de_datos)
+
+
 books <- list(ofertas_ciencia_de_datos, Ofertas_estadistica, machine_learning,
               ciencia_de_datos, estadistica,
               inteligencia_artificial, big_data, Analitica_de_datos)
+
+
 
 ## Tokenizar 
 
@@ -237,21 +260,24 @@ for(i in seq_along(titles)) {
 # set factor to keep books in order of publication
 series$book <- factor(series$book, levels = rev(titles))
 
-series
+head(series,18)
+
+
+#numeros <- as.character(c(1:10))
 
 
 
-
-
-
-# calculate percent of word use across all novels
-potter_pct <- series %>%
-  anti_join(stop_words_spanish) %>%
+# calcular el porcentaje de uso de la palabra en todas las novelas
+potter_pct <- series %>%  
+  anti_join(stop_words_spanish) %>% 
   anti_join(mas_palabras) %>% 
   count(word) %>%
   transmute(word, all_words = n / sum(n))
+summary(potter_pct)
+colSums(potter_pct[,2])
 
-# calculate percent of word use within each novel
+
+# calcular el porcentaje de uso de palabras dentro de cada novela
 frequency <- series %>%
   anti_join(stop_words_spanish) %>%
   anti_join(mas_palabras) %>% 
@@ -261,8 +287,13 @@ frequency <- series %>%
   arrange(desc(book_words)) %>%
   ungroup()
 
-frequency
 
+frequency
+summary(frequency)
+apply(frequency[,3:5], 2, sum)
+tail(frequency)
+
+########### compacion para todo el corpus
 
 win.graph()
 ggplot(frequency, aes(x = book_words, y = all_words, color = abs(all_words - book_words))) +
@@ -274,4 +305,64 @@ ggplot(frequency, aes(x = book_words, y = all_words, color = abs(all_words - boo
   scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
   facet_wrap(~ book, ncol = 2) +
   theme(legend.position="none") +
-  labs(y = "Términos y temas consultados ", x = NULL)
+  labs(y = "Corpus", x = NULL, title = "Comparación de las frecuencias de palabras")
+
+
+#### pruebas de correlacion **********
+
+frequency %>%
+  group_by(book) %>%
+  summarize(correlation = cor(book_words, all_words),
+            p_value = cor.test(book_words, all_words)$p.value)
+
+
+
+
+
+######### compracion con estadistica
+
+# que tan importante son la palabras para el termino "estadística"
+
+potter_pct2 <- series %>%  
+  anti_join(stop_words_spanish) %>% 
+  anti_join(mas_palabras) %>% filter(book=="estadística") %>% 
+  count(word) %>% 
+  transmute(word, all_words = n / 44327 )
+dim(potter_pct2)
+
+# calcular el porcentaje de uso de palabras dentro de cada novela
+frequency2 <- series %>%
+  anti_join(stop_words_spanish) %>%
+  anti_join(mas_palabras) %>% 
+  count(book, word) %>%
+  mutate(book_words = n / sum(n)) %>%
+  left_join(potter_pct2) %>%
+  arrange(desc(book_words)) %>%
+  ungroup() %>% filter(!is.na(all_words))# %>% filter(book != "estadística")
+apply(frequency2[,3:5], 2, sum)
+
+
+win.graph()
+ggplot(frequency2, aes(x = book_words, y = all_words, color = abs(all_words - book_words))) +
+  geom_abline(color = "red", lty = 2) +
+  geom_jitter(alpha = 0.1, size = 2.5, width = 0.3, height = 0.3) +
+  geom_text(aes(label = word), check_overlap = TRUE, vjust = 1.5) +
+  scale_x_log10(labels = scales::percent_format()) +
+  scale_y_log10(labels = scales::percent_format()) +
+  scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
+  facet_wrap(~ book, ncol = 2) +
+  theme(legend.position="none") +
+  labs(y = "Estadística", x = NULL, title = "Comparación de las frecuencias de palabras")
+
+
+
+frequency2 %>%
+  group_by(book) %>%
+  summarize(correlation = cor(book_words, all_words))
+            
+ #           ,
+#            p_value = cor.test(book_words, all_words)$p.value)
+
+
+
+
